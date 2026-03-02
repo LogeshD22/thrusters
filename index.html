@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pawfect Match</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f9;
+      text-align: center;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 20px;
+      font-size: 28px;
+    }
+    section {
+      padding: 20px;
+    }
+    select, button {
+      padding: 8px;
+      margin: 8px;
+      font-size: 14px;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      margin: 15px auto;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    #tracking {
+      margin-top: 15px;
+      display: none;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>🐾 Pawfect Match - Smart Pet Adoption</header>
+
+<section>
+  <h2>Find Your Perfect Pet</h2>
+
+  <select id="activity">
+    <option value="Low">Low Activity</option>
+    <option value="Medium">Medium Activity</option>
+    <option value="High">High Activity</option>
+  </select>
+
+  <select id="home">
+    <option value="Apartment">Apartment</option>
+    <option value="House">House</option>
+  </select>
+
+  <select id="work">
+    <option value="4">Works ≤ 8 hours</option>
+    <option value="9">Works > 8 hours</option>
+  </select>
+
+  <br>
+  <button onclick="findPet()">Find Match</button>
+
+  <div id="result"></div>
+</section>
+
+<section>
+  <h2>3D Pet Preview</h2>
+  <div id="3d"></div>
+</section>
+
+<script>
+
+// -------- PET DATABASE --------
+const pets = [
+  { name: "Buddy", type: "Dog", energy: "High", size: "Large", maintenance: "Medium" },
+  { name: "Milo", type: "Cat", energy: "Low", size: "Small", maintenance: "Low" },
+  { name: "Bella", type: "Dog", energy: "Medium", size: "Medium", maintenance: "Medium" }
+];
+
+// -------- COMPATIBILITY FUNCTION --------
+function findPet() {
+  const user = {
+    activity: document.getElementById("activity").value,
+    home: document.getElementById("home").value,
+    workHours: parseInt(document.getElementById("work").value)
+  };
+
+  let bestMatch = null;
+  let highestScore = -1;
+
+  pets.forEach(pet => {
+    let score = 0;
+
+    if (user.activity === pet.energy) score += 20;
+
+    if (user.home === "Apartment" && pet.size === "Small") score += 15;
+    if (user.home === "House" && pet.size !== "Small") score += 10;
+
+    if (user.workHours > 8 && pet.maintenance === "Low") score += 20;
+    if (user.workHours <= 8) score += 10;
+
+    if (score > highestScore) {
+      highestScore = score;
+      bestMatch = pet;
+    }
+  });
+
+  document.getElementById("result").innerHTML = `
+    <div class="card">
+      <h3>${bestMatch.name}</h3>
+      <p>Type: ${bestMatch.type}</p>
+      <p>Energy: ${bestMatch.energy}</p>
+      <p>Maintenance: ${bestMatch.maintenance}</p>
+      <button onclick="startTracking()">Adopt Now</button>
+      <div id="tracking">
+        <p>Application Submitted ✔</p>
+        <p>Shelter Review ✔</p>
+        <p>Meet Scheduled ✔</p>
+        <p>Adoption Approved 🎉</p>
+      </div>
+    </div>
+  `;
+}
+
+function startTracking() {
+  document.getElementById("tracking").style.display = "block";
+}
+
+// -------- 3D PREVIEW --------
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, 400/300, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(400, 300);
+document.getElementById("3d").appendChild(renderer.domElement);
+
+const geometry = new THREE.SphereGeometry(1, 32, 32);
+const material = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+const petModel = new THREE.Mesh(geometry, material);
+scene.add(petModel);
+
+camera.position.z = 3;
+
+function animate() {
+  requestAnimationFrame(animate);
+  petModel.rotation.y += 0.01;
+  renderer.render(scene, camera);
+}
+animate();
+
+</script>
+
+</body>
+</html>
